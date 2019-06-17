@@ -32,6 +32,8 @@ from tf_unet.layers import (weight_variable, weight_variable_devonc, bias_variab
                             conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax,
                             cross_entropy)
 
+from tensorflow.metrics import mean_iou
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
 
@@ -277,6 +279,33 @@ class Unet(object):
             prediction = sess.run(self.predicter, feed_dict={self.x: x_test, self.y: y_dummy, self.keep_prob: 1.})
 
         return prediction
+
+    def evaluate(self, model_path, x_test, y_test):
+        """
+        Evaluate trained model on a certain metric
+
+        :param model_path:
+        :param x_test: Images
+        :param y_test: Labels (masks)
+        :return: The iou
+        """
+
+        init_global = tf.global_variables_initializer()
+
+        with tf.Session() as sess:
+            sess.run(init_global)
+
+            self.restore(sess, model_path)
+
+            #preds = sess.run(self.predicter, feed_dict={self.x: x_test, self.y: y_test, self.keep_prob: 1.})
+
+            iou = mean_iou(self.y, self.predicter, num_classes=2)
+
+            sess.run(tf.local_variables_initializer())
+
+            iou_score = sess.run(iou, feed_dict={self.x: x_test, self.y: y_test, self.keep_prob: 1.})
+
+        return iou_score
 
     def save(self, sess, model_path):
         """
