@@ -7,14 +7,12 @@ import matplotlib.pyplot as plt
 import argparse
 
 
-def build_generator():
+def build_generator(args):
     nx = 572
     ny = 572
 
     data_path = '/home/linh/SkySpecs/blade_segment_ml/data/converted/aug/*'
-    generator = image_util.ImageDataProvider(data_path)
-    import pdb
-    pdb.set_trace()
+    generator = image_util.ImageDataProvider(data_path, target_size=args.target_size)
 
     return generator
 
@@ -22,7 +20,7 @@ def build_generator():
 def train_mode(model, generator, dir):
 
     trainer = unet.Trainer(model, optimizer='momentum', opt_kwargs=dict(momentum=0.2))
-    _ = trainer.train(generator, dir, training_iters=10, epochs=2, display_step=2)
+    _ = trainer.train(generator, dir, training_iters=10000, epochs=10, display_step=200)
 
 
 def eval_mode(model, generator, dir):
@@ -53,6 +51,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-m', '--mode', default='train', help='eval or train')
     parser.add_argument('-d', '--dir', default='trained_models', help='Folder to save/load models')
+    parser.add_argument('-t', '--target_size', default=(512, 512), help="Target size for the images")
 
     args = parser.parse_args()
 

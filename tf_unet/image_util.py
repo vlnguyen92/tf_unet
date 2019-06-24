@@ -164,12 +164,14 @@ class ImageDataProvider(BaseDataProvider):
             mask_suffix='.png', 
             data_prefix='image_',
             mask_prefix='mask_',
+            target_size=(512, 512),
             shuffle_data=True):
         super(ImageDataProvider, self).__init__(a_min, a_max)
         self.data_suffix = data_suffix
         self.mask_suffix = mask_suffix
         self.data_prefix = data_prefix
         self.mask_prefix = mask_prefix
+        self.target_size = target_size
         self.file_idx = -1
         self.shuffle_data = shuffle_data
 
@@ -184,8 +186,9 @@ class ImageDataProvider(BaseDataProvider):
         image_path = self.data_files[0]
         label_path = image_path.replace(self.data_suffix, self.mask_suffix).replace(self.data_prefix, self.mask_prefix)
 
-        img = self._load_file(image_path)
-        mask = self._load_file(label_path)
+        img = self._load_file(image_path, target_size=self.target_size)
+        mask = self._load_file(label_path, target_size=self.target_size)
+
         self.channels = 1 if len(img.shape) == 2 else img.shape[-1]
         self.n_class = 2 if len(mask.shape) == 2 else mask.shape[-1]
 
@@ -196,8 +199,12 @@ class ImageDataProvider(BaseDataProvider):
         all_files = glob.glob(search_path)
         return [name for name in all_files if self.data_suffix in name and not self.mask_suffix in name]
 
-    def _load_file(self, path, dtype=np.float32):
-        return np.array(Image.open(path), dtype)
+    def _load_file(self, path, dtype=np.float32, target_size=None):
+        img = Image.open(path)
+        if target_size:
+            img = img.resize(target_size)
+
+        return np.array(img, dtype)
 
     def _cylce_file(self):
         self.file_idx += 1
@@ -209,11 +216,14 @@ class ImageDataProvider(BaseDataProvider):
     def _next_data(self):
         self._cylce_file()
         image_name = self.data_files[self.file_idx]
-        label_name = image_name.replace(self.data_suffix, self.mask_suffix)
+        label_name = image_name.replace(self.data_suffix, self.mask_suffix).replace(self.data_prefix, self.mask_prefix)
 
-        import pdb
-        pdb.set_trace()
-        img = self._load_file(image_name, np.float32)
-        label = self._load_file(label_name, np.bool)
+        img = self._load_file(image_name, 
+                              dtype=np.float32,
+                              target_size=self.target_size)
+
+        label = self._load_file(label_name, 
+                                dtype=np.bool,
+                                target_size=self.target_size)
 
         return img,label
