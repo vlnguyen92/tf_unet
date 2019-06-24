@@ -1,4 +1,4 @@
-from tf_unet import image_gen
+from tf_unet import image_util
 from tf_unet import unet
 from tf_unet import util
 from pathlib import Path
@@ -11,7 +11,10 @@ def build_generator():
     nx = 572
     ny = 572
 
-    generator = image_gen.GrayScaleDataProvider(nx, ny, cnt=20)
+    data_path = '/home/linh/SkySpecs/blade_segment_ml/data/converted/aug/*'
+    generator = image_util.ImageDataProvider(data_path)
+    import pdb
+    pdb.set_trace()
 
     return generator
 

@@ -156,10 +156,20 @@ class ImageDataProvider(BaseDataProvider):
 
     """
 
-    def __init__(self, search_path, a_min=None, a_max=None, data_suffix=".tif", mask_suffix='_mask.tif', shuffle_data=True):
+    def __init__(self, 
+            search_path, 
+            a_min=None, 
+            a_max=None, 
+            data_suffix=".jpeg", 
+            mask_suffix='.png', 
+            data_prefix='image_',
+            mask_prefix='mask_',
+            shuffle_data=True):
         super(ImageDataProvider, self).__init__(a_min, a_max)
         self.data_suffix = data_suffix
         self.mask_suffix = mask_suffix
+        self.data_prefix = data_prefix
+        self.mask_prefix = mask_prefix
         self.file_idx = -1
         self.shuffle_data = shuffle_data
 
@@ -172,7 +182,8 @@ class ImageDataProvider(BaseDataProvider):
         print("Number of files used: %s" % len(self.data_files))
 
         image_path = self.data_files[0]
-        label_path = image_path.replace(self.data_suffix, self.mask_suffix)
+        label_path = image_path.replace(self.data_suffix, self.mask_suffix).replace(self.data_prefix, self.mask_prefix)
+
         img = self._load_file(image_path)
         mask = self._load_file(label_path)
         self.channels = 1 if len(img.shape) == 2 else img.shape[-1]
@@ -200,6 +211,8 @@ class ImageDataProvider(BaseDataProvider):
         image_name = self.data_files[self.file_idx]
         label_name = image_name.replace(self.data_suffix, self.mask_suffix)
 
+        import pdb
+        pdb.set_trace()
         img = self._load_file(image_name, np.float32)
         label = self._load_file(label_name, np.bool)
 
